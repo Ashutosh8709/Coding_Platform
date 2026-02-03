@@ -15,5 +15,8 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+import healthRouter from "./routes/health.routes.js";
+
+app.use("/api/v1/health", healthRouter);
 // app.use(errorHandler);
 export { app };
