@@ -128,10 +128,67 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User LoggedOut Successfully"));
 });
 
-const forgotPassword = asyncHandler(async (req, res) => {});
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  // take currentPassword and newPassword from frontend
+  // take userId from req.user and search user
+  // match currentPassword
+  // put newPassword
 
-const changeCurrentPassword = asyncHandler(async (req, res) => {});
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword)
+    throw new ApiError(400, "All fields are required");
 
-const getCurrentUser = asyncHandler(async (req, res) => {});
+  const userId = req.user?._id;
 
-export { loginUser, signupUser, logoutUser };
+  const user = await User.findById(userId);
+
+  const isCorrectPassword = await user.isPasswordCorrect(currentPassword);
+  if (!isCorrectPassword) throw new ApiError(401, "Wrong Password");
+
+  user.password = newPassword;
+  user.refreshToken = undefined;
+
+  user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully"));
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  // get email, newPassword from frontend
+  // find user with email and update password(need to verify email(future work))
+  // save user and ask to login
+
+  const { email, newPassword } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User Not Found");
+  }
+
+  user.password = newPassword;
+  user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Updated Successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  if (req.user) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, req.user, "Current user fetched successfully"),
+      );
+  }
+  throw new ApiError(404, "User not Logged In");
+});
+
+export {
+  loginUser,
+  signupUser,
+  logoutUser,
+  changeCurrentPassword,
+  forgotPassword,
+  getCurrentUser,
+};

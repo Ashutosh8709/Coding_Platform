@@ -8,7 +8,7 @@ const registerUserValidation = (req, res, next) => {
       .required()
       .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } }),
     password: Joi.string().min(8).max(100).required(),
-    consfirmPassword: Joi.ref("password"),
+    confirmPassword: Joi.ref("password"),
   });
 
   const { error } = schema.validate(req.body);
@@ -32,4 +32,36 @@ const loginUserValidation = (req, res, next) => {
   next();
 };
 
-export { registerUserValidation, loginUserValidation };
+const changePasswordValidation = (req, res, next) => {
+  const schema = Joi.object({
+    currentPassword: Joi.string().min(8).max(100).required(),
+    newPassword: Joi.string().min(8).max(100).required(),
+    confirmNewPassword: Joi.ref("newPssword"),
+  });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    throw new ApiError(400, error.message);
+  }
+  next();
+};
+
+const forgotPasswordValidation = (req, res, next) => {
+  const schema = Joi.object({
+    email: Joi.string()
+      .required()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } }),
+    newPassword: Joi.string().min(8).max(100).required(),
+    confirmNewPassword: Joi.ref("newPssword"),
+  });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    throw new ApiError(400, error.message);
+  }
+  next();
+};
+export {
+  registerUserValidation,
+  loginUserValidation,
+  changePasswordValidation,
+  forgotPasswordValidation,
+};
