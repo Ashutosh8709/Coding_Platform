@@ -17,8 +17,12 @@ app.use(cookieParser());
 
 import healthRouter from "./routes/health.routes.js";
 import userRouter from "./routes/auth.routes.js";
+import problemRouter from "./routes/problem.routes.js";
+import submissionRouter from "./routes/submission.routes.js";
 
 app.use("/api/v1/health", healthRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/problem", problemRouter);
+app.use("/api/v1/submit", submissionRouter);
 // app.use(errorHandler);
 export { app };
