@@ -38,11 +38,37 @@ const addProblem = asyncHandler(async (req, res) => {
 });
 
 const getAllProblem = asyncHandler(async (req, res) => {
-  const problems = await Problem.find({}).select("-testcases");
+  // implement pagination here
+
+  const page = Number.parseInt(req.query.page || 1);
+  const limit = Number.parseInt(req.query.limit || 10);
+
+  const skip = (page - 1) * limit;
+  const problems = await Problem.find({ difficulty })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .select("-testCases");
+
+  const totalProblems = await Problem.countDocuments();
+
+  const totalPages = Math.ceil(totalProblems / limit);
+
+  const payload = {
+    problems,
+    pagination: {
+      totalProblems,
+      totalPages,
+      currentPage: page,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 
   return res
     .status(200)
-    .json(new ApiResponse(200, problems, "All problems fetched successfully"));
+    .json(new ApiResponse(200, payload, "All problems fetched successfully"));
 });
 
 const getProblemById = asyncHandler(async (req, res) => {
@@ -55,4 +81,42 @@ const getProblemById = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, problem, "Problem Fetched Successfully"));
 });
-export { addProblem, getAllProblem, getProblemById };
+
+const getProblemByDifficulty = asyncHandler(async (req, res) => {
+  // get difficulty from req.query and also implement pagination
+  // find problems based on difficulty
+  // return them
+  const { difficulty } = req.query;
+  if (!difficulty) throw new ApiError(404, "Difficulty is required");
+
+  const page = Number.parseInt(req.query.page || 1);
+  const limit = Number.parseInt(req.query.limit || 10);
+
+  const skip = (page - 1) * limit;
+  const problems = await Problem.find({ difficulty })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .select("-testCases");
+
+  const totalProblems = await Problem.countDocuments();
+
+  const totalPages = Math.ceil(totalProblems / limit);
+
+  const payload = {
+    problems,
+    pagination: {
+      totalProblems,
+      totalPages,
+      currentPage: page,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, payload, "Problems fetched Successfully"));
+});
+export { addProblem, getAllProblem, getProblemById, getProblemByDifficulty };
