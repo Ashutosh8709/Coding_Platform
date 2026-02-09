@@ -9,7 +9,7 @@ export const judgeSubmission = async (problemId, code, onTestcaseUpdate) => {
     throw new ApiError(404, "Problem not found");
   }
 
-  const testcases = problem.testCases; // ⚠️ make sure schema matches
+  const testcases = problem.testCases;
 
   if (!testcases || testcases.length === 0) {
     throw new ApiError(500, "No testcases found");
@@ -22,24 +22,31 @@ export const judgeSubmission = async (problemId, code, onTestcaseUpdate) => {
 
     const result = await runCpp(code, testcase.input);
 
-    // 🔥 TLE / CE / RE
+    // TLE / CE / RE
+    if (result.status === "COMPILE_ERROR") {
+      return {
+        verdict: result.status,
+        output: result.output,
+      };
+    }
+
     if (result.status !== "SUCCESS") {
-      overallVerdict = result.status;
+      // overallVerdict = result.status;
 
-      if (onTestcaseUpdate) {
-        await onTestcaseUpdate({
-          index: i + 1,
-          verdict: result.status,
-        });
-      }
+      // if (onTestcaseUpdate) {
+      //   await onTestcaseUpdate({
+      //     index: i + 1,
+      //     verdict: result.status,
+      //   });
+      // }
 
-      continue;
+      return { verdict: result.status };
     }
 
     const userOutput = result.output.trim();
     const expectedOutput = testcase.output.trim();
 
-    // ❌ WRONG ANSWER
+    // WRONG ANSWER
     if (userOutput !== expectedOutput) {
       overallVerdict = "WRONG_ANSWER";
 
@@ -55,7 +62,7 @@ export const judgeSubmission = async (problemId, code, onTestcaseUpdate) => {
       continue;
     }
 
-    // ✅ PASSED testcase
+    // PASSED testcase
     if (onTestcaseUpdate) {
       await onTestcaseUpdate({
         index: i + 1,
