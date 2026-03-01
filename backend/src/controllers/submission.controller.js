@@ -84,7 +84,32 @@ const getUserSubmission = asyncHandler(async (req, res) => {
   // find submission made by user and return
 
   const userId = req.user?._id;
-  const submission = await Submission.find({ userId });
+  const submission = await Submission.aggregate([
+    { $match: { userId: userId } },
+    {
+      $lookup: {
+        from: "problems",
+        localField: "problemId",
+        foreignField: "_id",
+        as: "problem",
+      },
+    },
+    {
+      $addFields: { problemTitle: { $arrayElemAt: ["$problem.title", 0] } },
+    },
+    {
+      $project: {
+        problemId: 1,
+        userId: 1,
+        code: 1,
+        language: 1,
+        verdict: 1,
+        createdAt: 1,
+        problemTitle: 1,
+      },
+    },
+  ]);
+
   if (!submission || submission.length === 0) {
     return res
       .status(200)
@@ -132,7 +157,7 @@ const getUserSubmissionByProblem = asyncHandler(async (req, res) => {
   const submissions = await Submission.find({
     userId: userId,
     problemId: problemId,
-  });
+  }).sort({ createdAt: -1 });
   if (!submissions || submissions.length == 0) {
     return res
       .status(200)

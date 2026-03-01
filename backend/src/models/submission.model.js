@@ -23,6 +23,7 @@ const submissionSchema = new Schema(
     verdict: {
       type: String,
       required: true,
+      enum: ["ACCEPTED", "WRONG_ANSWER", "RUNTIME_ERROR", "COMPILE_ERROR"],
     },
     executionTime: {
       type: Number,

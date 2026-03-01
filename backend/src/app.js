@@ -20,11 +20,13 @@ import userRouter from "./routes/auth.routes.js";
 import problemRouter from "./routes/problem.routes.js";
 import submissionRouter from "./routes/submission.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 
 app.use("/api/v1/health", healthRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/problem", problemRouter);
 app.use("/api/v1/submit", submissionRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use(errorHandler);
 export { app };
