@@ -4,6 +4,11 @@ import CodeEditor from "./editor/CodeEditor";
 import OutputPanel from "./editor/OutputPanel";
 import ProblemTab from "./tabs/ProblemTab";
 import { getDraft, addDraft } from "../../services/draft.service";
+import {
+  getLocalDraft,
+  saveLocalDraft,
+  removeLocalDraft,
+} from "../../utils/draftLocalCache";
 
 function ProblemLayout({
   problem,
@@ -14,6 +19,8 @@ function ProblemLayout({
   runStream,
   handleRun,
   handleSubmit,
+  outputCollapsed,
+  setOutputCollapsed,
 }) {
   // =============================
   // Language + Code
@@ -22,6 +29,11 @@ function ProblemLayout({
   const [code, setCode] = useState("");
   const [savingDraft, setSavingDraft] = useState(false);
   const isInitialLoad = useRef(true);
+  const [leftW, setLeftW] = useState(45);
+  const dragging = useRef(false);
+  const [outputHeight, setOutputHeight] = useState(260);
+  const COLLAPSED_HEIGHT = 32;
+  const verticalDragging = useRef(false);
 
   const saveDraft = async () => {
     if (!problem?._id || !code?.trim()) return;
@@ -36,6 +48,18 @@ function ProblemLayout({
       setSavingDraft(false);
     }
   };
+
+  const handleReset = () => {
+    const confirmReset = window.confirm("Reset code to starter template?");
+
+    if (!confirmReset) return;
+    setCode(problem?.execution?.starterCode?.[lang] || "");
+    removeLocalDraft(problem._id, lang);
+  };
+
+  // useEffect(() => {
+  //   setCode("");
+  // }, [lang]);
 
   useEffect(() => {
     if (isInitialLoad.current) {
@@ -52,20 +76,37 @@ function ProblemLayout({
 
   useEffect(() => {
     if (!problem?._id) return;
+
+    const localDraft = getLocalDraft(problem._id, lang);
+
+    if (localDraft) {
+      setCode(localDraft);
+    }
+
     const fetchDraft = async () => {
       const res = await getDraft(problem?._id, lang);
       const draft = res?.data?.data;
-      setCode(draft?.code || problem?.execution?.starterCode?.[lang] || "");
+
+      if (draft?.code) {
+        setCode(draft.code);
+        saveLocalDraft(problem._id, lang, draft.code);
+      } else if (!localDraft) {
+        setCode(problem?.execution?.starterCode?.[lang] || "");
+      }
     };
 
     fetchDraft();
   }, [problem?._id, lang]);
 
+  useEffect(() => {
+    if (!problem?._id) return;
+
+    saveLocalDraft(problem._id, lang, code);
+  }, [code, lang, problem?._id]);
+
   // =============================
   // Horizontal Resize
   // =============================
-  const [leftW, setLeftW] = useState(45);
-  const dragging = useRef(false);
 
   const onMouseMove = useCallback((e) => {
     if (!dragging.current) return;
@@ -88,10 +129,6 @@ function ProblemLayout({
   // =============================
   // Vertical Resize
   // =============================
-  const [outputHeight, setOutputHeight] = useState(260);
-  const [outputCollapsed, setOutputCollapsed] = useState(false);
-  const COLLAPSED_HEIGHT = 32;
-  const verticalDragging = useRef(false);
 
   const onVerticalMove = useCallback((e) => {
     if (!verticalDragging.current) return;
@@ -126,6 +163,7 @@ function ProblemLayout({
         runResult={runResult}
         onRun={() => handleRun(code)}
         onSubmit={() => handleSubmit(code)}
+        onReset={handleReset}
       />
 
       <div className="flex flex-1 overflow-hidden">

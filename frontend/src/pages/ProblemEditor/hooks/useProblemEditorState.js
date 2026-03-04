@@ -10,6 +10,7 @@ export default function useProblemEditorState(problemId, problem) {
   const [submissions, setSubmissions] = useState([]);
   const [runStream, setRunStream] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [outputCollapsed, setOutputCollapsed] = useState(true);
 
   // =============================
   // Initialize visible testcases
@@ -95,6 +96,7 @@ export default function useProblemEditorState(problemId, problem) {
   // Run Handler
   // =============================
   const handleRun = async (code) => {
+    setOutputCollapsed(false);
     setSubmitting(true);
     setRunResult({ type: "running" });
     setSubmitResult(null);
@@ -132,5 +134,7 @@ export default function useProblemEditorState(problemId, problem) {
     setRunStream,
     handleRun,
     handleSubmit,
+    setOutputCollapsed,
+    outputCollapsed,
   };
 }

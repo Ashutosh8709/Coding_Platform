@@ -10,6 +10,7 @@ function EditorHeader({
   setLang,
   onRun,
   onSubmit,
+  onReset,
 }) {
   return (
     <div className="flex items-center gap-3 px-4 h-11 border-b border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-700 flex-shrink-0">
@@ -43,6 +44,12 @@ function EditorHeader({
         ))}
       </select>
 
+      <button
+        onClick={onReset}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-dark-500 text-gray-700 dark:text-white text-xs font-bold hover:border-red-400 hover:bg-red-500/5 transition-all"
+      >
+        ↺ Reset
+      </button>
       {/* RUN BUTTON */}
       <button
         onClick={onRun}
