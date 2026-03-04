@@ -11,18 +11,22 @@ const getDraft = asyncHandler(async (req, res) => {
   if (!userId || !problemId || !language)
     throw new ApiError(404, "All fields are required");
 
-  const draft = await Draft.findOne({
-    userId: userId,
-    problemId: problemId,
-    language: language,
-  }).lean();
+  try {
+    const draft = await Draft.findOne({
+      userId: userId,
+      problemId: problemId,
+      language: language,
+    }).lean();
 
-  if (!draft)
-    return res.status(200).json(new ApiResponse(200, {}, "No Draft found"));
+    if (!draft)
+      return res.status(200).json(new ApiResponse(200, {}, "No Draft found"));
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, draft, "Draft Fetched Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, draft, "Draft Fetched Successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 const addDraft = asyncHandler(async (req, res) => {
@@ -75,4 +79,3 @@ const deleteDraft = asyncHandler(async (req, res) => {
 });
 
 export { getDraft, addDraft, deleteDraft };
-s;

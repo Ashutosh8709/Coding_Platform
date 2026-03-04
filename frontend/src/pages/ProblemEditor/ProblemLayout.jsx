@@ -3,6 +3,7 @@ import EditorHeader from "./editor/EditorHeader";
 import CodeEditor from "./editor/CodeEditor";
 import OutputPanel from "./editor/OutputPanel";
 import ProblemTab from "./tabs/ProblemTab";
+import { getDraft, addDraft } from "../../services/draft.service";
 
 function ProblemLayout({
   problem,
@@ -19,10 +20,46 @@ function ProblemLayout({
   // =============================
   const [lang, setLang] = useState("cpp");
   const [code, setCode] = useState("");
+  const [savingDraft, setSavingDraft] = useState(false);
+  const isInitialLoad = useRef(true);
+
+  const saveDraft = async () => {
+    if (!problem?._id || !code?.trim()) return;
+
+    try {
+      setSavingDraft(true);
+
+      await addDraft(problem._id, lang, code);
+    } catch (err) {
+      console.error("Draft save failed:", err);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
 
   useEffect(() => {
-    setCode(problem?.execution?.starterCode?.[lang] || "");
-  }, [problem, lang]);
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      saveDraft();
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, [code, lang]);
+
+  useEffect(() => {
+    if (!problem?._id) return;
+    const fetchDraft = async () => {
+      const res = await getDraft(problem?._id, lang);
+      const draft = res?.data?.data;
+      setCode(draft?.code || problem?.execution?.starterCode?.[lang] || "");
+    };
+
+    fetchDraft();
+  }, [problem?._id, lang]);
 
   // =============================
   // Horizontal Resize
