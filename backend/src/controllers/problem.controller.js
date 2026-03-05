@@ -8,118 +8,134 @@ const addProblem = asyncHandler(async (req, res) => {
   // validate of everything is done in middleware
   // insert in db
 
-  const {
-    title,
-    description,
-    inputFormat,
-    outputFormat,
-    constraints,
-    difficulty,
-    testcases,
-  } = req.body;
+  try {
+    const {
+      title,
+      description,
+      inputFormat,
+      outputFormat,
+      constraints,
+      difficulty,
+      testcases,
+    } = req.body;
 
-  const problem = await Problem.create({
-    title,
-    description,
-    inputFormat,
-    outputFormat,
-    constraints,
-    difficulty,
-    testCases: testcases,
-    createdBy: req.user?._id,
-  }).select("-testcases");
+    const problem = await Problem.create({
+      title,
+      description,
+      inputFormat,
+      outputFormat,
+      constraints,
+      difficulty,
+      testCases: testcases,
+      createdBy: req.user?._id,
+    }).select("-testcases");
 
-  if (!problem)
-    throw new ApiError(400, "Something went wrong while adding this problem");
+    if (!problem)
+      throw new ApiError(400, "Something went wrong while adding this problem");
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, problem, "Problem Added Successfully"));
+    return res
+      .status(201)
+      .json(new ApiResponse(201, problem, "Problem Added Successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 const getAllProblem = asyncHandler(async (req, res) => {
   // implement pagination here
 
-  const page = Number.parseInt(req.query.page || 1);
-  const limit = Number.parseInt(req.query.limit || 10);
+  try {
+    const page = Number.parseInt(req.query.page || 1);
+    const limit = Number.parseInt(req.query.limit || 10);
 
-  if (!page || !limit)
-    throw new ApiError(404, "Page number and limit is required");
+    if (!page || !limit)
+      throw new ApiError(404, "Page number and limit is required");
 
-  const skip = (page - 1) * limit;
-  const problems = await Problem.find({})
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-    .select("-testCases");
+    const skip = (page - 1) * limit;
+    const problems = await Problem.find({})
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .select("-testCases");
 
-  const totalProblems = await Problem.countDocuments();
+    const totalProblems = await Problem.countDocuments();
 
-  const totalPages = Math.ceil(totalProblems / limit);
+    const totalPages = Math.ceil(totalProblems / limit);
 
-  const payload = {
-    problems,
-    pagination: {
-      totalProblems,
-      totalPages,
-      currentPage: page,
-      limit,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
-  };
+    const payload = {
+      problems,
+      pagination: {
+        totalProblems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    };
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, payload, "All problems fetched successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, payload, "All problems fetched successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 const getProblemById = asyncHandler(async (req, res) => {
-  const { problemId } = req.params;
-  const problem = await Problem.findById(problemId).select("-testcases");
+  try {
+    const { problemId } = req.params;
+    const problem = await Problem.findById(problemId).select("-testcases");
 
-  if (!problem) throw new ApiError(404, "Problem not found");
+    if (!problem) throw new ApiError(404, "Problem not found");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, problem, "Problem Fetched Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, problem, "Problem Fetched Successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 const getProblemByDifficulty = asyncHandler(async (req, res) => {
   // get difficulty from req.query and also implement pagination
   // find problems based on difficulty
   // return them
-  const { difficulty } = req.query;
-  if (!difficulty) throw new ApiError(404, "Difficulty is required");
+  try {
+    const { difficulty } = req.query;
+    if (!difficulty) throw new ApiError(404, "Difficulty is required");
 
-  const page = Number.parseInt(req.query.page || 1);
-  const limit = Number.parseInt(req.query.limit || 10);
+    const page = Number.parseInt(req.query.page || 1);
+    const limit = Number.parseInt(req.query.limit || 10);
 
-  const skip = (page - 1) * limit;
-  const problems = await Problem.find({ difficulty })
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-    .select("-testCases");
+    const skip = (page - 1) * limit;
+    const problems = await Problem.find({ difficulty })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .select("-testCases");
 
-  const totalProblems = await Problem.countDocuments();
+    const totalProblems = await Problem.countDocuments();
 
-  const totalPages = Math.ceil(totalProblems / limit);
+    const totalPages = Math.ceil(totalProblems / limit);
 
-  const payload = {
-    problems,
-    pagination: {
-      totalProblems,
-      totalPages,
-      currentPage: page,
-      limit,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
-  };
+    const payload = {
+      problems,
+      pagination: {
+        totalProblems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    };
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, payload, "Problems fetched Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, payload, "Problems fetched Successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 export { addProblem, getAllProblem, getProblemById, getProblemByDifficulty };

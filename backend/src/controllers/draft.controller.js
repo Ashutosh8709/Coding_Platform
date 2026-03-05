@@ -30,52 +30,60 @@ const getDraft = asyncHandler(async (req, res) => {
 });
 
 const addDraft = asyncHandler(async (req, res) => {
-  const userId = req.user?._id;
-  const { problemId } = req.params;
-  const { language } = req.query;
-  const { code } = req.body;
+  try {
+    const userId = req.user?._id;
+    const { problemId } = req.params;
+    const { language } = req.query;
+    const { code } = req.body;
 
-  if (!userId || !problemId || !language || !code)
-    throw new ApiError(400, "All fields are required");
+    if (!userId || !problemId || !language || !code)
+      throw new ApiError(400, "All fields are required");
 
-  const draft = await Draft.findOneAndUpdate(
-    {
-      userId,
-      problemId,
-      language,
-    },
-    { code },
-    { upsert: true, new: true },
-  );
+    const draft = await Draft.findOneAndUpdate(
+      {
+        userId,
+        problemId,
+        language,
+      },
+      { code },
+      { upsert: true, new: true },
+    );
 
-  if (!draft) {
-    throw new ApiError(400, "Error occured while updating draft");
+    if (!draft) {
+      throw new ApiError(400, "Error occured while updating draft");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, draft, "Draft updated Successfully"));
+  } catch (error) {
+    console.log(error);
   }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, draft, "Draft updated Successfully"));
 });
 
 const deleteDraft = asyncHandler(async (req, res) => {
-  const userId = req.user?._id;
-  const { problemId } = req.params;
-  const { language } = req.query;
+  try {
+    const userId = req.user?._id;
+    const { problemId } = req.params;
+    const { language } = req.query;
 
-  if (!userId || !problemId || !language)
-    throw new ApiError(400, "All fields are required");
+    if (!userId || !problemId || !language)
+      throw new ApiError(400, "All fields are required");
 
-  const deletedDraft = await Draft.findOneAndDelete({
-    userId,
-    problemId,
-    language,
-  });
+    const deletedDraft = await Draft.findOneAndDelete({
+      userId,
+      problemId,
+      language,
+    });
 
-  if (!deletedDraft) throw new ApiError(404, "Draft Not Found");
+    if (!deletedDraft) throw new ApiError(404, "Draft Not Found");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Draft deleted Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Draft deleted Successfully"));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 export { getDraft, addDraft, deleteDraft };
