@@ -113,6 +113,68 @@ const getDiscussProblem = asyncHandler(async (req, res) => {
   }
 });
 
+const getDiscussGeneral = asyncHandler(async (req, res) => {
+  // find discussions of type general and send them
+  // get username
+
+  try {
+    const discussions = await Discussion.aggregate([
+      {
+        $match: {
+          type: "general",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: { path: "$user" },
+      },
+      {
+        $addFields: {
+          username: "$user.name",
+        },
+      },
+      {
+        $project: {
+          username: 1,
+          title: 1,
+          content: 1,
+          votes: 1,
+          replyCount: 1,
+          createdAt: 1,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]);
+
+    if (!discussions || discussions.length == 0) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, [], "No Discussions found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          discussions,
+          "All Discussions fetched Successfully",
+        ),
+      );
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 const updateDiscuss = asyncHandler(async (req, res) => {
   // get discussionId from req.params
   // get updated title and content from req.body
@@ -173,4 +235,10 @@ const deleteDiscuss = asyncHandler(async (req, res) => {
   }
 });
 
-export { addDiscuss, getDiscussProblem, updateDiscuss, deleteDiscuss };
+export {
+  addDiscuss,
+  getDiscussProblem,
+  updateDiscuss,
+  deleteDiscuss,
+  getDiscussGeneral,
+};
