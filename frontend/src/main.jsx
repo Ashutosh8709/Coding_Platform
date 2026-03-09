@@ -15,6 +15,10 @@ import Problems from "./pages/Problems";
 import Submission from "./pages/Submission";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Discuss from "./pages/Discuss/Discuss";
+import Leaderboard from "./pages/Leaderboard";
+import Contests from "./pages/Contests";
+import NewDiscussion from "./pages/Discuss/NewDiscussion";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +58,38 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Courses />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/discuss",
+        element: (
+          <ProtectedRoute>
+            <Discuss />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/discuss/create",
+        element: (
+          <ProtectedRoute>
+            <NewDiscussion />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/leaderboard",
+        element: (
+          <ProtectedRoute>
+            <Leaderboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/contests",
+        element: (
+          <ProtectedRoute>
+            <Contests />
           </ProtectedRoute>
         ),
       },

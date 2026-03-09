@@ -4,9 +4,11 @@ import SolutionTab from "./SolutionTab";
 import DiscussTab from "./DiscussTab";
 import SubmissionsTab from "./SubmissionsTab";
 import SubmitResultPanel from "./SubmitResultPanel";
+import { useProblemDiscussion } from "../../../hooks/useProblemDiscussion";
 
 export default function ProblemTab({ problem, submissions, submitResult }) {
   const [tab, setTab] = useState("Description");
+  const { loading, problemDiscussions } = useProblemDiscussion(problem?._id);
 
   return (
     <>
@@ -31,7 +33,9 @@ export default function ProblemTab({ problem, submissions, submitResult }) {
       <div className="p-6 pb-16 bg-white dark:bg-dark-800">
         {tab === "Description" && <DescriptionTab p={problem} />}
         {tab === "Solutions" && <SolutionTab />}
-        {tab === "Discuss" && <DiscussTab />}
+        {tab === "Discuss" && (
+          <DiscussTab loading={loading} discussions={problemDiscussions} />
+        )}
         {tab === "Submissions" && <SubmissionsTab submissions={submissions} />}
       </div>
     </>
