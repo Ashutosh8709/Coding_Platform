@@ -12,7 +12,7 @@ const addDiscuss = asyncHandler(async (req, res) => {
   try {
     const userId = req.user?._id;
     const { type } = req.params;
-    const { content, title, problemId } = req.body;
+    const { content, title, code = null, problemId } = req.body;
 
     if (!["problem", "general"].includes(type)) {
       throw new ApiError(400, "Invalid discussion type");
@@ -29,6 +29,7 @@ const addDiscuss = asyncHandler(async (req, res) => {
     const discussion = await Discussion.create({
       type,
       problemId: problemId || null,
+      code,
       title,
       content,
       userId,
@@ -61,36 +62,95 @@ const getDiscussProblem = asyncHandler(async (req, res) => {
           problemId: new mongoose.Types.ObjectId(problemId),
         },
       },
+
       {
         $lookup: {
           from: "users",
           localField: "userId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: { name: 1 },
+            },
+          ],
           as: "user",
         },
       },
-      {
-        $unwind: { path: "$user" },
-      },
+
+      { $unwind: "$user" },
+
       {
         $addFields: {
           username: "$user.name",
         },
       },
+
+      {
+        $lookup: {
+          from: "replies",
+          let: { discussionId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$discussionId", "$$discussionId"],
+                },
+              },
+            },
+
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: { name: 1 },
+                  },
+                ],
+                as: "user",
+              },
+            },
+
+            { $unwind: "$user" },
+
+            {
+              $addFields: {
+                username: "$user.name",
+              },
+            },
+
+            {
+              $project: {
+                content: 1,
+                username: 1,
+                createdAt: 1,
+                userId: 1,
+              },
+            },
+
+            { $sort: { createdAt: -1 } },
+          ],
+          as: "replies",
+        },
+      },
+
       {
         $project: {
           username: 1,
           problemId: 1,
           title: 1,
           content: 1,
+          code: 1,
           votes: 1,
           replyCount: 1,
           createdAt: 1,
+          replies: 1,
+          userId: 1,
         },
       },
-      {
-        $sort: { createdAt: -1 },
-      },
+
+      { $sort: { createdAt: -1 } },
     ]);
 
     if (!discussions || discussions.length == 0) {
@@ -145,6 +205,7 @@ const getDiscussGeneral = asyncHandler(async (req, res) => {
           username: 1,
           title: 1,
           content: 1,
+          code: 1,
           votes: 1,
           replyCount: 1,
           createdAt: 1,
@@ -180,7 +241,7 @@ const updateDiscuss = asyncHandler(async (req, res) => {
   // get updated title and content from req.body
   try {
     const { discussionId } = req.params;
-    const { title, content } = req.body;
+    const { title, content, code } = req.body;
     const userId = req.user?._id;
 
     if (!discussionId || !title || !content) {
@@ -197,6 +258,9 @@ const updateDiscuss = asyncHandler(async (req, res) => {
 
     discussion.title = title;
     discussion.content = content;
+    if (code) {
+      discussion.code = code;
+    }
 
     await discussion.save();
 

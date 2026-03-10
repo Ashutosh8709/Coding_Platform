@@ -9,7 +9,6 @@ import {
 
 export const useDiscussion = () => {
   const [discussions, setDiscussions] = useState([]);
-  const [problemDiscussions, setProblemDiscussions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

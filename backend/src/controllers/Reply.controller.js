@@ -18,7 +18,7 @@ const addReply = asyncHandler(async (req, res) => {
     if (!userId || !discussionId || !content)
       throw new ApiError(404, "All Fields are required");
 
-    const reply = await Reply.create({
+    let reply = await Reply.create({
       discussionId,
       userId,
       content,
@@ -30,6 +30,9 @@ const addReply = asyncHandler(async (req, res) => {
       $inc: { replyCount: 1 },
     });
 
+    reply = reply.toObject();
+    reply.username = req.user?.name;
+
     return res
       .status(200)
       .json(new ApiResponse(200, reply, "Reply added successfully"));
@@ -38,7 +41,29 @@ const addReply = asyncHandler(async (req, res) => {
   }
 });
 
-const updateReply = asyncHandler(async (req, res) => {});
+const updateReply = asyncHandler(async (req, res) => {
+  // get replyId from req.params
+  // get content from req.body;
+
+  const userId = req.user?._id;
+  const { replyId } = req.params;
+  const { content } = req.body;
+
+  if (!replyId || !content) throw new ApiError(404, "All fields Are required");
+
+  const reply = await Reply.findById(replyId);
+
+  if (reply?.userId.toString() !== userId.toString())
+    throw new ApiError(401, "Unauthorized Access");
+
+  reply.content = content;
+
+  await reply.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, reply, "Reply Updated Successfully"));
+});
 
 const deleteReply = asyncHandler(async (req, res) => {
   // get replyId from req.params;
